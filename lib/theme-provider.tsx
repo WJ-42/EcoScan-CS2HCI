@@ -7,6 +7,7 @@ import { getSchemeColors, type ColorScheme } from "@/constants/theme";
 
 const STORAGE_KEY_ACCESSIBILITY = "@ecoscan_accessibility";
 const STORAGE_KEY_HIGH_CONTRAST_LEGACY = "@ecoscan_high_contrast";
+const STORAGE_KEY_SCHEME = "@ecoscan_color_scheme";
 
 export type AccessibilityPreset = "vision" | "motor" | "cognitive";
 
@@ -63,37 +64,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const { highContrast, largerText, largerTouchTargets, simpleNavigation } = accessibility;
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [legacy, json] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEY_HIGH_CONTRAST_LEGACY),
-          AsyncStorage.getItem(STORAGE_KEY_ACCESSIBILITY),
-        ]);
-        let state: AccessibilityState = DEFAULT_ACCESSIBILITY;
-        if (json) {
-          const parsed = JSON.parse(json) as Partial<AccessibilityState>;
-          state = { ...DEFAULT_ACCESSIBILITY, ...parsed };
-        }
-        if (legacy === "true") {
-          state = { ...state, highContrast: true };
-          await AsyncStorage.removeItem(STORAGE_KEY_HIGH_CONTRAST_LEGACY);
-        }
-        setAccessibilityState(state);
-      } catch {
-        setAccessibilityState(DEFAULT_ACCESSIBILITY);
-      } finally {
-        setIsLoaded(true);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      AsyncStorage.setItem(STORAGE_KEY_ACCESSIBILITY, JSON.stringify(accessibility));
-    }
-  }, [accessibility, isLoaded]);
-
   const applyScheme = useCallback(
     (scheme: ColorScheme, hc: boolean) => {
       nativewindColorScheme.set(scheme);
@@ -111,10 +81,48 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const [legacy, json, savedScheme] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_HIGH_CONTRAST_LEGACY),
+          AsyncStorage.getItem(STORAGE_KEY_ACCESSIBILITY),
+          AsyncStorage.getItem(STORAGE_KEY_SCHEME),
+        ]);
+        let state: AccessibilityState = DEFAULT_ACCESSIBILITY;
+        if (json) {
+          const parsed = JSON.parse(json) as Partial<AccessibilityState>;
+          state = { ...DEFAULT_ACCESSIBILITY, ...parsed };
+        }
+        if (legacy === "true") {
+          state = { ...state, highContrast: true };
+          await AsyncStorage.removeItem(STORAGE_KEY_HIGH_CONTRAST_LEGACY);
+        }
+        setAccessibilityState(state);
+        if (savedScheme === "light" || savedScheme === "dark") {
+          setColorSchemeState(savedScheme);
+          setUserOverride(true);
+          applyScheme(savedScheme, state.highContrast);
+        }
+      } catch {
+        setAccessibilityState(DEFAULT_ACCESSIBILITY);
+      } finally {
+        setIsLoaded(true);
+      }
+    })();
+  }, [applyScheme]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      AsyncStorage.setItem(STORAGE_KEY_ACCESSIBILITY, JSON.stringify(accessibility));
+    }
+  }, [accessibility, isLoaded]);
+
   const setColorScheme = useCallback(
     (scheme: ColorScheme) => {
       setUserOverride(true);
       setColorSchemeState(scheme);
+      AsyncStorage.setItem(STORAGE_KEY_SCHEME, scheme);
       applyScheme(scheme, highContrast);
     },
     [applyScheme, highContrast],
