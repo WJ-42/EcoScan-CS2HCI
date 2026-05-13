@@ -1,3 +1,5 @@
+"use no memo";
+
 import { useCallback } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -5,24 +7,26 @@ import { CommonActions } from "@react-navigation/native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
 
-import { useColors } from "@/hooks/use-colors";
-import { useAccessibility } from "@/hooks/use-accessibility";
+import { getColors } from "@/lib/theme";
+import { useThemeContext } from "@/lib/theme-provider";
 import { TOUCH_TARGET_LARGE } from "@/lib/accessibility-constants";
 
 /**
  * Fully custom bottom tab bar.
  *
  * We render the tab bar ourselves instead of relying on React Navigation's
- * default `BottomTabBar`, because that default doesn't reliably pick up
- * `tabBarStyle.backgroundColor` updates on the static web build / hydration
- * — so it stayed white on first load even after the rest of the app had
- * correctly resolved to dark mode. Rendering inline-styled Views straight
- * from `useColors()` is the same pattern that fixed `ScreenContainer`.
+ * default `BottomTabBar`. The `"use no memo"` directive at the top opts this
+ * file out of the React Compiler — without it, the compiler appears to
+ * over-memoize this component on the static Vercel build, so it never
+ * re-reads `colorScheme` from context even when the rest of the app
+ * correctly resolves to dark mode. We also read the theme context directly
+ * (instead of via `useColors`) to keep the dependency chain as short and
+ * obvious as possible.
  */
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-  const colors = useColors();
+  const { colorScheme, highContrast, largerTouchTargets, simpleNavigation } = useThemeContext();
+  const colors = getColors(colorScheme, highContrast);
   const insets = useSafeAreaInsets();
-  const { largerTouchTargets, simpleNavigation } = useAccessibility();
 
   const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
   const useLargeNav = largerTouchTargets || simpleNavigation;
