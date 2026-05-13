@@ -1,4 +1,4 @@
-import { View, Platform, Dimensions, ViewStyle } from "react-native";
+import { View, Platform, ViewStyle } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useThemeContext } from "@/lib/theme-provider";
 
@@ -16,17 +16,23 @@ const PHONE_HEIGHT = 844; // iPhone 14–style aspect ratio (~19.5:9)
  */
 export function PhoneFrame({ children }: PhoneFrameProps) {
   const { colorScheme } = useThemeContext();
-  const [windowHeight, setWindowHeight] = useState(
-    Dimensions.get("window").height
-  );
+
+  // Initialize with a sensible default; update on client after mount
+  const [windowHeight, setWindowHeight] = useState<number>(PHONE_HEIGHT);
+  const [mounted, setMounted] = useState<boolean>(false);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
+    if (typeof window === "undefined") return;
+
+    setMounted(true);
+    setWindowHeight(window.innerHeight);
+
     const onResize = () => {
-      setWindowHeight(Dimensions.get("window").height);
+      setWindowHeight(window.innerHeight);
     };
-    const subscription = Dimensions.addEventListener("change", onResize);
-    return () => subscription.remove();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   // Apply web-only box-shadow via ref callback
@@ -45,18 +51,22 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
     return <>{children}</>;
   }
 
+  // Use window height once mounted; fall back to PHONE_HEIGHT during SSR
+  const effectiveHeight = mounted ? windowHeight : PHONE_HEIGHT;
+  const phoneHeight = Math.min(PHONE_HEIGHT, effectiveHeight);
+
   const pageStyle: ViewStyle = {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colorScheme === "dark" ? "#000000" : "#FFFFFF",
-    minHeight: windowHeight,
+    minHeight: effectiveHeight,
   };
 
   const phoneStyle: ViewStyle = {
     width: PHONE_WIDTH,
     maxWidth: PHONE_WIDTH,
-    height: Math.min(PHONE_HEIGHT, windowHeight),
+    height: phoneHeight,
     overflow: "hidden",
     borderRadius: 40,
     backgroundColor: colorScheme === "dark" ? "#111214" : "#FFFFFF",
