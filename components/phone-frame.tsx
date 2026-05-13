@@ -1,6 +1,5 @@
 import { View, Platform, Dimensions, ViewStyle } from "react-native";
 import { useCallback, useEffect, useState } from "react";
-import { isRunningInPreviewIframe } from "@/lib/_core/manus-runtime";
 import { useThemeContext } from "@/lib/theme-provider";
 
 interface PhoneFrameProps {
@@ -11,10 +10,9 @@ const PHONE_WIDTH = 390;
 const PHONE_HEIGHT = 844; // iPhone 14–style aspect ratio (~19.5:9)
 
 /**
- * On web (when NOT inside the Manus preview iframe), wraps the app
- * in a centered phone-sized container with a dark background and
- * device-like frame. On native or inside the Manus preview iframe,
- * renders children directly with no wrapper.
+ * On web, wraps the app in a centered phone-sized container with a dark
+ * background and device-like frame. On native, renders children directly
+ * with no wrapper.
  */
 export function PhoneFrame({ children }: PhoneFrameProps) {
   const { colorScheme } = useThemeContext();
@@ -42,8 +40,8 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
     }
   }, []);
 
-  // Only apply the phone frame on web AND when not inside the Manus preview iframe
-  if (Platform.OS !== "web" || isRunningInPreviewIframe()) {
+  // Only apply the phone frame on web
+  if (Platform.OS !== "web") {
     return <>{children}</>;
   }
 
