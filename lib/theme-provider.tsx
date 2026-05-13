@@ -123,7 +123,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Seed state from the same synchronous source the module-level code used so
   // the first render produces inline CSS vars that match the DOM already set.
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(
-    () => INITIAL_STORED_SCHEME ?? systemScheme,
+    () => INITIAL_RESOLVED_SCHEME,
   );
   const [accessibility, setAccessibilityState] = useState<AccessibilityState>(() => ({
     ...DEFAULT_ACCESSIBILITY,

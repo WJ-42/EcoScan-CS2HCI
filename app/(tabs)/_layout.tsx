@@ -1,5 +1,8 @@
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAccessibility } from "@/hooks/use-accessibility";
 import { useColors } from "@/hooks/use-colors";
@@ -7,22 +10,25 @@ import { useColors } from "@/hooks/use-colors";
 export default function TabLayout() {
   const { simpleNavigation } = useAccessibility();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
+
   const iconSize = simpleNavigation ? 28 : 26;
-  const barHeight = simpleNavigation ? 78 : 64;
-  const verticalPad = simpleNavigation ? 12 : 8;
+  const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
+  const tabBarHeight = (simpleNavigation ? 78 : 62) + bottomPadding;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarButton: HapticTab,
         tabBarActiveTintColor: colors.tint,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
-          height: barHeight,
-          paddingTop: verticalPad,
-          paddingBottom: verticalPad,
+          height: tabBarHeight,
+          paddingTop: 8,
+          paddingBottom: bottomPadding,
           borderTopWidth: 0.5,
         },
         tabBarLabelStyle: {
