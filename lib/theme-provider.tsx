@@ -52,6 +52,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme);
   const [accessibility, setAccessibilityState] = useState<AccessibilityState>(DEFAULT_ACCESSIBILITY);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [userOverride, setUserOverride] = useState(false);
+
+  // Sync with system color scheme on mount and when it changes (fixes hydration mismatch on web)
+  useEffect(() => {
+    if (!userOverride) {
+      setColorSchemeState(systemScheme);
+    }
+  }, [systemScheme, userOverride]);
 
   const { highContrast, largerText, largerTouchTargets, simpleNavigation } = accessibility;
 
@@ -105,6 +113,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setColorScheme = useCallback(
     (scheme: ColorScheme) => {
+      setUserOverride(true);
       setColorSchemeState(scheme);
       applyScheme(scheme, highContrast);
     },
