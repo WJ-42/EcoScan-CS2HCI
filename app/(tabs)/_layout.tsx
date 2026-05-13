@@ -1,17 +1,33 @@
 import { Tabs } from "expo-router";
 
-import { CustomTabBar } from "@/components/custom-tab-bar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAccessibility } from "@/hooks/use-accessibility";
+import { useColors } from "@/hooks/use-colors";
 
 export default function TabLayout() {
   const { simpleNavigation } = useAccessibility();
+  const colors = useColors();
   const iconSize = simpleNavigation ? 28 : 26;
 
+  // Pin the chrome colours inline. The default `BottomTabBar` reads its
+  // background from React Navigation's `theme.colors.card` (now supplied by
+  // `NavThemeBridge` in `app/_layout.tsx`), but we also explicitly set
+  // `tabBarStyle.backgroundColor` here so the bar is correct on the very
+  // first paint of the static export — before any hydration/context update.
   return (
     <Tabs
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.tint,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: {
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
+        },
+        tabBarLabelStyle: {
+          fontSize: simpleNavigation ? 14 : 12,
+        },
+      }}
     >
       <Tabs.Screen
         name="index"
