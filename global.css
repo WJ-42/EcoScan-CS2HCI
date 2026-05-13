@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Enable grab-to-scroll on web */
+@supports (cursor: grab) {
+  html,
+  body {
+    cursor: grab;
+  }
+  html:active,
+  body:active {
+    cursor: grabbing;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollable containers */
+[style*="overflow"]:not([style*="overflow: visible"]) {
+  cursor: grab;
+}
+
+[style*="overflow"]:not([style*="overflow: visible"]):active {
+  cursor: grabbing;
+}

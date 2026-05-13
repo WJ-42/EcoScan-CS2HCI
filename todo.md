@@ -1,0 +1,27 @@
+# Project TODO
+
+- [x] Configure theme colors (green sustainability palette)
+- [x] Add icon mappings for all tab icons
+- [x] Set up tab navigation (Home, Scan, History, Profile)
+- [x] Create mock product data and types
+- [x] Build Home screen with scan CTA, recent scans, eco tips
+- [x] Build Scan screen with camera barcode scanner
+- [x] Build Product Detail screen with sustainability score and impact cards
+- [x] Build Alternatives screen with greener product recommendations
+- [x] Build Reviews screen with community ratings
+- [x] Build Write Review screen with star rating form
+- [x] Build History screen with scanned products list
+- [x] Build Profile screen with user stats and preferences
+- [x] Create Sustainability Score Badge component
+- [x] Create Impact Card component
+- [x] Create Product Card component
+- [x] Create Star Rating component
+- [x] Add haptic feedback on key interactions
+- [x] Add press feedback animations
+- [x] Generate app logo
+- [x] Polish UI and accessibility
+- [x] Wrap web version in centered phone-sized container (mobile preview frame)
+- [x] Add C and D grade products to mock data for more variety
+- [x] Fix greener alternatives so they always rate better than the original product
+- [x] Fix white edge artifacting in dark mode around phone frame corners
+- [x] Enable grab-to-scroll on web (mouse drag scrolling without shift+mousewheel)
