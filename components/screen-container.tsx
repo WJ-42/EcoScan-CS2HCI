@@ -2,6 +2,7 @@ import { View, type ViewProps } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 
 import { cn } from "@/lib/utils";
+import { useColors } from "@/hooks/use-colors";
 
 export interface ScreenContainerProps extends ViewProps {
   /**
@@ -47,13 +48,17 @@ export function ScreenContainer({
   style,
   ...props
 }: ScreenContainerProps) {
+  // Drive the background color from React state directly. Relying on the
+  // `bg-background` Tailwind class (which uses `var(--color-background)`)
+  // is fragile on the static web build because the CSS variable cascade
+  // from the ThemeProvider's wrapping View doesn't always make it down to
+  // every NativeWind-compiled descendant — leading to a white background
+  // even when the theme state is correctly set to "dark".
+  const colors = useColors();
   return (
     <View
-      className={cn(
-        "flex-1",
-        "bg-background",
-        containerClassName
-      )}
+      className={cn("flex-1", containerClassName)}
+      style={{ backgroundColor: colors.background }}
       {...props}
     >
       <SafeAreaView

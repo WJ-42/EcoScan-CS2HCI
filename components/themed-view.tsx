@@ -1,6 +1,6 @@
 import { View, type ViewProps } from "react-native";
 
-import { cn } from "@/lib/utils";
+import { useColors } from "@/hooks/use-colors";
 
 export interface ThemedViewProps extends ViewProps {
   className?: string;
@@ -8,8 +8,17 @@ export interface ThemedViewProps extends ViewProps {
 
 /**
  * A View component with automatic theme-aware background.
- * Uses NativeWind for styling - pass className for additional styles.
+ * Background color is sourced from React state directly (via `useColors`) to
+ * avoid the unreliable CSS-variable cascade for the `bg-background` class on
+ * the static web build.
  */
-export function ThemedView({ className, ...otherProps }: ThemedViewProps) {
-  return <View className={cn("bg-background", className)} {...otherProps} />;
+export function ThemedView({ className, style, ...otherProps }: ThemedViewProps) {
+  const colors = useColors();
+  return (
+    <View
+      className={className}
+      style={[{ backgroundColor: colors.background }, style]}
+      {...otherProps}
+    />
+  );
 }
