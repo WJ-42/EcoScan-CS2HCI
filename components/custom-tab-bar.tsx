@@ -42,7 +42,10 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
       style={[
         styles.bar,
         {
-          backgroundColor: colors.background,
+          // TEMPORARY DIAGNOSTIC: bright pink to verify this component is
+          // the one actually rendering on the deployed Vercel build. Revert
+          // once we know whether expo-router is honoring the tabBar prop.
+          backgroundColor: "#FF00FF",
           borderTopColor: colors.border,
           paddingTop: simpleNavigation ? 12 : 8,
           paddingBottom: bottomPadding,
