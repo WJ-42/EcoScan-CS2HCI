@@ -28,7 +28,7 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
         {/* Same story as bg-background: `text-foreground` resolves to a CSS
             var that NativeWind bakes as the LIGHT value during static export,
             so the title rendered as black-on-dark. Use an inline colour. */}
-        <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
+        <Text className="text-base font-bold" style={{ color: colors.foreground }}>
           {title}
         </Text>
       </TouchableOpacity>
