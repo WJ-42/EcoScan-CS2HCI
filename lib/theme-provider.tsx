@@ -24,7 +24,7 @@ const DEFAULT_ACCESSIBILITY: AccessibilityState = {
   simpleNavigation: false,
 };
 
-const PRESETS: Record<AccessibilityPreset, AccessibilityState> = {
+export const PRESETS: Record<AccessibilityPreset, AccessibilityState> = {
   vision: { highContrast: true, largerText: true, largerTouchTargets: false, simpleNavigation: false },
   motor: { highContrast: false, largerText: false, largerTouchTargets: true, simpleNavigation: true },
   cognitive: { highContrast: false, largerText: true, largerTouchTargets: false, simpleNavigation: true },
@@ -155,8 +155,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [applyScheme, colorScheme]);
 
   useEffect(() => {
-    applyScheme(colorScheme, highContrast);
-  }, [applyScheme, colorScheme, highContrast]);
+    if (isLoaded) {
+      applyScheme(colorScheme, highContrast);
+    }
+  }, [applyScheme, colorScheme, highContrast, isLoaded]);
 
   const themeVariables = useMemo(
     () => {

@@ -1,6 +1,5 @@
 import { View, Platform, ViewStyle } from "react-native";
 import { useCallback, useEffect, useState } from "react";
-import { useThemeContext } from "@/lib/theme-provider";
 
 interface PhoneFrameProps {
   children: React.ReactNode;
@@ -15,7 +14,6 @@ const PHONE_HEIGHT = 844; // iPhone 14–style aspect ratio (~19.5:9)
  * with no wrapper.
  */
 export function PhoneFrame({ children }: PhoneFrameProps) {
-  const { colorScheme } = useThemeContext();
 
   // Initialize with a sensible default; update on client after mount
   const [windowHeight, setWindowHeight] = useState<number>(PHONE_HEIGHT);
@@ -59,7 +57,7 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colorScheme === "dark" ? "#000000" : "#FFFFFF",
+    backgroundColor: "#1A1A1A",
     minHeight: effectiveHeight,
   };
 
@@ -69,7 +67,7 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
     height: phoneHeight,
     overflow: "hidden",
     borderRadius: 40,
-    backgroundColor: colorScheme === "dark" ? "#111214" : "#FFFFFF",
+    backgroundColor: "#111214",
   };
 
   return (

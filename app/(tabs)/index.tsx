@@ -208,10 +208,6 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     marginBottom: 24,
   },
-  greeting: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
   appName: {
     fontSize: 28,
     fontWeight: "800",

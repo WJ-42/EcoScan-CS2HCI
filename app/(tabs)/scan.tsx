@@ -29,6 +29,10 @@ try {
   // Camera not available (web)
 }
 
+// Stable fallback so the hook is always called unconditionally inside the component
+const usePermissions: () => [any, () => void] =
+  useCameraPermissions ?? (() => [null, () => {}]);
+
 export default function ScanScreen() {
   const router = useRouter();
   const colors = useColors();
@@ -40,9 +44,7 @@ export default function ScanScreen() {
   const [webCameraError, setWebCameraError] = useState(false);
   const [cameraRetryKey, setCameraRetryKey] = useState(0);
 
-  // Camera permissions (only on native)
-  const permissionHook = useCameraPermissions ? useCameraPermissions() : [null, () => {}];
-  const [permission, requestPermission] = permissionHook;
+  const [permission, requestPermission] = usePermissions();
 
   const isWeb = Platform.OS === "web";
 

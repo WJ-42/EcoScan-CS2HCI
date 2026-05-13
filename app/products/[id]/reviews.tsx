@@ -37,9 +37,15 @@ export default function ReviewsScreen() {
     );
   }
 
-  const mockReviews = getReviewsForProduct(product.id);
-  const userProductReviews = userReviews.filter((r) => r.productId === product.id);
-  const allReviews = [...userProductReviews, ...mockReviews];
+  const mockReviews = useMemo(() => getReviewsForProduct(product.id), [product.id]);
+  const userProductReviews = useMemo(
+    () => userReviews.filter((r) => r.productId === product.id),
+    [userReviews, product.id],
+  );
+  const allReviews = useMemo(
+    () => [...userProductReviews, ...mockReviews],
+    [userProductReviews, mockReviews],
+  );
 
   const filteredReviews = useMemo(() => {
     let reviews = [...allReviews];

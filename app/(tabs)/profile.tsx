@@ -11,6 +11,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useAccessibility } from "@/hooks/use-accessibility";
 import {
   useThemeContext,
+  PRESETS,
   type AccessibilityPreset,
 } from "@/lib/theme-provider";
 import { useScanHistory } from "@/lib/scan-history-context";
@@ -28,12 +29,7 @@ function matchesPreset(
   preset: AccessibilityPreset,
   state: { highContrast: boolean; largerText: boolean; largerTouchTargets: boolean; simpleNavigation: boolean }
 ): boolean {
-  const presets: Record<AccessibilityPreset, typeof state> = {
-    vision: { highContrast: true, largerText: true, largerTouchTargets: false, simpleNavigation: false },
-    motor: { highContrast: false, largerText: false, largerTouchTargets: true, simpleNavigation: true },
-    cognitive: { highContrast: false, largerText: true, largerTouchTargets: false, simpleNavigation: true },
-  };
-  const p = presets[preset];
+  const p = PRESETS[preset];
   return (
     state.highContrast === p.highContrast &&
     state.largerText === p.largerText &&
