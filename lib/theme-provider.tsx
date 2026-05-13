@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Appearance, View, useColorScheme as useSystemColorScheme } from "react-native";
 import { colorScheme as nativewindColorScheme, vars } from "nativewind";
 
@@ -131,9 +131,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }));
   const [isLoaded, setIsLoaded] = useState(false);
   const [userOverride, setUserOverride] = useState<boolean>(() => INITIAL_STORED_SCHEME !== null);
+  const isInitialMount = useRef(true);
 
-  // Sync with system color scheme on mount and when it changes (fixes hydration mismatch on web)
+  // Sync with system color scheme when it changes. Skip the very first run:
+  // on web, useSystemColorScheme() returns null before hydration and defaults
+  // to "light", which would overwrite the correctly seeded INITIAL_RESOLVED_SCHEME.
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if (!userOverride) {
       setColorSchemeState(systemScheme);
     }

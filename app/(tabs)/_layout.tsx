@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
@@ -8,23 +8,41 @@ import { useAccessibility } from "@/hooks/use-accessibility";
 import { useColors } from "@/hooks/use-colors";
 
 export default function TabLayout() {
-  const { simpleNavigation } = useAccessibility();
+  const { simpleNavigation, largerTouchTargets } = useAccessibility();
   const colors = useColors();
   const insets = useSafeAreaInsets();
 
   const iconSize = simpleNavigation ? 28 : 26;
+  const tabMinTouch = largerTouchTargets || simpleNavigation ? 56 : 44;
   const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
   const tabBarHeight = (simpleNavigation ? 78 : 62) + bottomPadding;
+
+  // On web, render a background View whose color is driven by the CSS variable
+  // set synchronously at module load — bypasses React state for the first paint.
+  const tabBarBackground =
+    Platform.OS === "web"
+      ? () => (
+          <View
+            style={{
+              position: "absolute",
+              inset: 0,
+              // @ts-expect-error — CSS variables work in RN Web style objects at runtime
+              backgroundColor: "var(--color-background)",
+            }}
+          />
+        )
+      : undefined;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarBackground,
         tabBarActiveTintColor: colors.tint,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: Platform.OS === "web" ? "transparent" : colors.background,
           borderTopColor: colors.border,
           height: tabBarHeight,
           paddingTop: 8,
@@ -34,6 +52,10 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: simpleNavigation ? 14 : 12,
           paddingBottom: 2,
+        },
+        tabBarItemStyle: {
+          minHeight: tabMinTouch,
+          minWidth: tabMinTouch,
         },
       }}
     >
