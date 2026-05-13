@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Pure black backdrop behind the phone frame on web. Set before JS runs so the
+   pre-hydration paint doesn't flash gray/white. */
+html,
+body,
+#root {
+  background-color: #000000;
+}
+
 /* Enable grab-to-scroll on web */
 @supports (cursor: grab) {
   html,

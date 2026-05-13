@@ -9,6 +9,61 @@ const STORAGE_KEY_ACCESSIBILITY = "@ecoscan_accessibility";
 const STORAGE_KEY_HIGH_CONTRAST_LEGACY = "@ecoscan_high_contrast";
 const STORAGE_KEY_SCHEME = "@ecoscan_color_scheme";
 
+/**
+ * Synchronously read the persisted color scheme from `localStorage`.
+ *
+ * `AsyncStorage` is promise-based even on web, so by the time it resolves the
+ * provider has already rendered (and committed) with the wrong scheme — which
+ * causes a flash of light-mode styling on every page load. On web,
+ * `AsyncStorage` is backed by `localStorage` using the same keys, so we can
+ * read it synchronously here to seed the initial state and DOM correctly.
+ */
+function readStoredScheme(): ColorScheme | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = window.localStorage?.getItem(STORAGE_KEY_SCHEME);
+    if (value === "light" || value === "dark") return value;
+  } catch {
+    // localStorage can throw in privacy modes / sandboxed iframes — ignore.
+  }
+  return null;
+}
+
+function readStoredHighContrast(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage?.getItem(STORAGE_KEY_ACCESSIBILITY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AccessibilityState>;
+      if (parsed && typeof parsed.highContrast === "boolean") return parsed.highContrast;
+    }
+    if (window.localStorage?.getItem(STORAGE_KEY_HIGH_CONTRAST_LEGACY) === "true") return true;
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+function applySchemeToDom(scheme: ColorScheme, highContrast: boolean) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.dataset.theme = scheme;
+  root.classList.toggle("dark", scheme === "dark");
+  const palette = getSchemeColors(scheme, highContrast);
+  Object.entries(palette).forEach(([token, value]) => {
+    root.style.setProperty(`--color-${token}`, value);
+  });
+}
+
+// Apply the persisted theme to the DOM *before* React renders to eliminate the
+// flash of light-mode content. Runs once at module load on the client only.
+const INITIAL_STORED_SCHEME = readStoredScheme();
+const INITIAL_STORED_HIGH_CONTRAST = readStoredHighContrast();
+if (INITIAL_STORED_SCHEME) {
+  nativewindColorScheme.set(INITIAL_STORED_SCHEME);
+  applySchemeToDom(INITIAL_STORED_SCHEME, INITIAL_STORED_HIGH_CONTRAST);
+}
+
 export type AccessibilityPreset = "vision" | "motor" | "cognitive";
 
 type AccessibilityState = {
@@ -50,10 +105,18 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useSystemColorScheme() ?? "light";
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme);
-  const [accessibility, setAccessibilityState] = useState<AccessibilityState>(DEFAULT_ACCESSIBILITY);
+
+  // Seed state from the same synchronous source the module-level code used so
+  // the first render produces inline CSS vars that match the DOM already set.
+  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(
+    () => INITIAL_STORED_SCHEME ?? systemScheme,
+  );
+  const [accessibility, setAccessibilityState] = useState<AccessibilityState>(() => ({
+    ...DEFAULT_ACCESSIBILITY,
+    highContrast: INITIAL_STORED_HIGH_CONTRAST,
+  }));
   const [isLoaded, setIsLoaded] = useState(false);
-  const [userOverride, setUserOverride] = useState(false);
+  const [userOverride, setUserOverride] = useState<boolean>(() => INITIAL_STORED_SCHEME !== null);
 
   // Sync with system color scheme on mount and when it changes (fixes hydration mismatch on web)
   useEffect(() => {
@@ -64,22 +127,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const { highContrast, largerText, largerTouchTargets, simpleNavigation } = accessibility;
 
-  const applyScheme = useCallback(
-    (scheme: ColorScheme, hc: boolean) => {
-      nativewindColorScheme.set(scheme);
-      Appearance.setColorScheme?.(scheme);
-      const palette = getSchemeColors(scheme, hc);
-      if (typeof document !== "undefined") {
-        const root = document.documentElement;
-        root.dataset.theme = scheme;
-        root.classList.toggle("dark", scheme === "dark");
-        Object.entries(palette).forEach(([token, value]) => {
-          root.style.setProperty(`--color-${token}`, value);
-        });
-      }
-    },
-    [],
-  );
+  const applyScheme = useCallback((scheme: ColorScheme, hc: boolean) => {
+    nativewindColorScheme.set(scheme);
+    Appearance.setColorScheme?.(scheme);
+    applySchemeToDom(scheme, hc);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -89,7 +141,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem(STORAGE_KEY_ACCESSIBILITY),
           AsyncStorage.getItem(STORAGE_KEY_SCHEME),
         ]);
-        let state: AccessibilityState = DEFAULT_ACCESSIBILITY;
+        let state: AccessibilityState = {
+          ...DEFAULT_ACCESSIBILITY,
+          highContrast: INITIAL_STORED_HIGH_CONTRAST,
+        };
         if (json) {
           const parsed = JSON.parse(json) as Partial<AccessibilityState>;
           state = { ...DEFAULT_ACCESSIBILITY, ...parsed };
@@ -105,7 +160,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           applyScheme(savedScheme, state.highContrast);
         }
       } catch {
-        setAccessibilityState(DEFAULT_ACCESSIBILITY);
+        // keep current state
       } finally {
         setIsLoaded(true);
       }

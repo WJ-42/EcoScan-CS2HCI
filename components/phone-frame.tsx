@@ -57,7 +57,7 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1A1A1A",
+    backgroundColor: "#000000",
     minHeight: effectiveHeight,
   };
 
