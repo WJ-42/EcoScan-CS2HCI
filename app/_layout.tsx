@@ -2,12 +2,18 @@ import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { Platform } from "react-native";
 import "@/lib/nativewind-pressable";
-import { ThemeProvider } from "@/lib/theme-provider";
+import { ThemeProvider, useThemeContext } from "@/lib/theme-provider";
+import {
+  ThemeProvider as NavThemeProvider,
+  DarkTheme as NavDarkTheme,
+  DefaultTheme as NavDefaultTheme,
+  type Theme as NavTheme,
+} from "@react-navigation/native";
 import {
   SafeAreaFrameContext,
   SafeAreaInsetsContext,
@@ -18,6 +24,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { ScanHistoryProvider } from "@/lib/scan-history-context";
 import { PhoneFrame } from "@/components/phone-frame";
+import { getSchemeColors } from "@/constants/theme";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -87,13 +94,15 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <ScanHistoryProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="products/[id]" />
-            <Stack.Screen name="products/[id]/alternatives" />
-            <Stack.Screen name="products/[id]/reviews" />
-            <Stack.Screen name="products/[id]/write-review" />
-          </Stack>
+          <NavThemeBridge>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="products/[id]" />
+              <Stack.Screen name="products/[id]/alternatives" />
+              <Stack.Screen name="products/[id]/reviews" />
+              <Stack.Screen name="products/[id]/write-review" />
+            </Stack>
+          </NavThemeBridge>
           <StatusBar style="auto" />
         </ScanHistoryProvider>
       </QueryClientProvider>
@@ -123,4 +132,39 @@ export default function RootLayout() {
       <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
     </ThemeProvider>
   );
+}
+
+/**
+ * Feed React Navigation a theme derived from our palette.
+ *
+ * `expo-router` mounts a `NavigationContainer` internally, and
+ * `NavigationContainer` always wraps its children with its own React Navigation
+ * `ThemeProvider` (defaulting to the light `DefaultTheme`). That inner provider
+ * overrides any `NavThemeProvider` we set *outside* the container — which is
+ * why header/tab-bar chrome stayed light even when our app palette was dark.
+ *
+ * Wrapping the `Stack` here positions our `NavThemeProvider` *inside* the
+ * container, so it wins for everything below it.
+ */
+function NavThemeBridge({ children }: { children: ReactNode }) {
+  const { colorScheme, highContrast } = useThemeContext();
+  const navTheme = useMemo<NavTheme>(() => {
+    const base = colorScheme === "dark" ? NavDarkTheme : NavDefaultTheme;
+    const palette = getSchemeColors(colorScheme, highContrast);
+    return {
+      ...base,
+      dark: colorScheme === "dark",
+      colors: {
+        ...base.colors,
+        primary: palette.primary,
+        background: palette.background,
+        card: palette.background,
+        text: palette.foreground,
+        border: palette.border,
+        notification: palette.error,
+      },
+    };
+  }, [colorScheme, highContrast]);
+
+  return <NavThemeProvider value={navTheme}>{children}</NavThemeProvider>;
 }

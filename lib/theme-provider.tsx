@@ -2,12 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Appearance, View, useColorScheme as useSystemColorScheme } from "react-native";
 import { colorScheme as nativewindColorScheme, vars } from "nativewind";
-import {
-  ThemeProvider as NavThemeProvider,
-  DarkTheme as NavDarkTheme,
-  DefaultTheme as NavDefaultTheme,
-  type Theme as NavTheme,
-} from "@react-navigation/native";
 
 import { getSchemeColors, type ColorScheme } from "@/constants/theme";
 
@@ -247,29 +241,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [colorScheme, highContrast],
   );
 
-  // Feed React Navigation a theme derived from our palette. The bottom tab bar
-  // falls back to `theme.colors.card` for its background when `tabBarStyle` is
-  // not yet applied (e.g. on hydration of the static export), which is why it
-  // flashed white in dark mode. Setting the nav theme to match our scheme
-  // makes the default already correct.
-  const navTheme = useMemo<NavTheme>(() => {
-    const base = colorScheme === "dark" ? NavDarkTheme : NavDefaultTheme;
-    const palette = getSchemeColors(colorScheme, highContrast);
-    return {
-      ...base,
-      dark: colorScheme === "dark",
-      colors: {
-        ...base.colors,
-        primary: palette.primary,
-        background: palette.background,
-        card: palette.background,
-        text: palette.foreground,
-        border: palette.border,
-        notification: palette.error,
-      },
-    };
-  }, [colorScheme, highContrast]);
-
   const value = useMemo(
     () => ({
       colorScheme,
@@ -303,9 +274,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      <View style={[{ flex: 1 }, themeVariables]}>
-        <NavThemeProvider value={navTheme}>{children}</NavThemeProvider>
-      </View>
+      <View style={[{ flex: 1 }, themeVariables]}>{children}</View>
     </ThemeContext.Provider>
   );
 }

@@ -9,7 +9,10 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
   const colors = useColors();
 
   return (
-    <View className="bg-background">
+    // NOTE: inline backgroundColor instead of `bg-background` — the NativeWind
+    // class resolves to `var(--color-background)` which doesn't reliably win on
+    // the static export's first paint, causing a white bar in dark mode.
+    <View style={{ backgroundColor: colors.background }}>
       <TouchableOpacity
         className="flex-row items-center gap-1.5"
         onPress={() => setIsOpen((value) => !value)}
