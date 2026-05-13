@@ -55,13 +55,27 @@ function applySchemeToDom(scheme: ColorScheme, highContrast: boolean) {
   });
 }
 
+function readSystemScheme(): ColorScheme {
+  if (typeof window === "undefined") return "light";
+  try {
+    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) return "dark";
+  } catch {
+    // ignore
+  }
+  return "light";
+}
+
 // Apply the persisted theme to the DOM *before* React renders to eliminate the
 // flash of light-mode content. Runs once at module load on the client only.
+// We always set the CSS variables so consumers that rely on `var(--color-*)`
+// (e.g. the bottom tab bar) never resolve to `unset`/transparent on first
+// paint, even for visitors with no localStorage entry yet.
 const INITIAL_STORED_SCHEME = readStoredScheme();
 const INITIAL_STORED_HIGH_CONTRAST = readStoredHighContrast();
-if (INITIAL_STORED_SCHEME) {
-  nativewindColorScheme.set(INITIAL_STORED_SCHEME);
-  applySchemeToDom(INITIAL_STORED_SCHEME, INITIAL_STORED_HIGH_CONTRAST);
+const INITIAL_RESOLVED_SCHEME: ColorScheme = INITIAL_STORED_SCHEME ?? readSystemScheme();
+if (typeof window !== "undefined") {
+  nativewindColorScheme.set(INITIAL_RESOLVED_SCHEME);
+  applySchemeToDom(INITIAL_RESOLVED_SCHEME, INITIAL_STORED_HIGH_CONTRAST);
 }
 
 export type AccessibilityPreset = "vision" | "motor" | "cognitive";

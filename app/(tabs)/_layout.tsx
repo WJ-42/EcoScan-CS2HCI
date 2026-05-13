@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { Tabs } from "expo-router";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -9,23 +10,36 @@ export default function TabLayout() {
   const colors = useColors();
   const iconSize = simpleNavigation ? 28 : 26;
 
-  // Pin the chrome colours inline. The default `BottomTabBar` reads its
-  // background from React Navigation's `theme.colors.card` (now supplied by
-  // `NavThemeBridge` in `app/_layout.tsx`), but we also explicitly set
-  // `tabBarStyle.backgroundColor` here so the bar is correct on the very
-  // first paint of the static export — before any hydration/context update.
+  // On web, point the bar's colours at the CSS variables our `ThemeProvider`
+  // keeps in sync on `document.documentElement`. The browser resolves them at
+  // paint time, so the bar reacts to theme changes via the CSS cascade — no
+  // dependency on React re-rendering. This dodges the React Compiler
+  // memoisation that froze previous attempts at the light palette in the
+  // Vercel static build. On native we just use the inline palette values.
+  const isWeb = Platform.OS === "web";
+  const bgColor = isWeb ? "var(--color-background)" : colors.background;
+  const borderColor = isWeb ? "var(--color-border)" : colors.border;
+  const activeTint = isWeb ? "var(--color-primary)" : colors.tint;
+  const inactiveTint = isWeb ? "var(--color-muted)" : colors.muted;
+  const barHeight = simpleNavigation ? 78 : 64;
+  const verticalPad = simpleNavigation ? 12 : 8;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.tint,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarActiveTintColor: activeTint,
+        tabBarInactiveTintColor: inactiveTint,
         tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
+          backgroundColor: bgColor,
+          borderTopColor: borderColor,
+          height: barHeight,
+          paddingTop: verticalPad,
+          paddingBottom: verticalPad,
         },
         tabBarLabelStyle: {
           fontSize: simpleNavigation ? 14 : 12,
+          paddingBottom: 2,
         },
       }}
     >
